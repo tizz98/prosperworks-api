@@ -40,18 +40,20 @@ class Request(object):
         if not self.access_token or not self.email:
             raise exceptions.NotConfiguredException()
 
-    def get(self, endpoint, params=None):
+    def _request(self, endpoint, method, data_kw_name, data=None):
         self._check_token_and_email()
-        if params is None:
-            params = {}
+        if data is None:
+            data = {}
         url = constants.BASE_URL + endpoint
-        response = requests.get(url, params=params, headers=self.headers)
+        response = getattr(requests, method)(
+            url,
+            headers=self.headers,
+            **{data_kw_name: data}
+        )
         return self._check_response(response)
 
+    def get(self, endpoint, params=None):
+        return self._request(endpoint, 'get', 'params', data=params)
+
     def post(self, endpoint, json=None):
-        self._check_token_and_email()
-        if json is None:
-            json = {}
-        url = constants.BASE_URL + endpoint
-        response = requests.post(url, json=json, headers=self.headers)
-        return self._check_response(response)
+        return self._request(endpoint, 'post', 'json', data=json)
