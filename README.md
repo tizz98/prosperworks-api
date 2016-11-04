@@ -1,6 +1,11 @@
 # Prosperworks Api
 A python based api wrapper for [Prosperworks](https://www.prosperworks.com/developer_api).
 
+## Installation
+From source: `pip install git+git://github.com:tizz98/prosperworks-api.git@master`
+
+From pip: _coming soon_
+
 # Models
 ### `prosperworks.models.Company`
 #### Fields
