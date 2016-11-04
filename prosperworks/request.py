@@ -1,7 +1,7 @@
 import requests
 
-import constants
-import exceptions
+from . import constants
+from . import exceptions
 
 
 class Request(object):
@@ -45,11 +45,13 @@ class Request(object):
         if data is None:
             data = {}
         url = constants.BASE_URL + endpoint
-        response = getattr(requests, method)(
-            url,
-            headers=self.headers,
-            **{data_kw_name: data}
-        )
+
+        if data_kw_name == 'kwargs':
+            kw = data
+        else:
+            kw = {data_kw_name: data}
+
+        response = getattr(requests, method)(url, headers=self.headers, **kw)
         return self._check_response(response)
 
     def get(self, endpoint, params=None):
@@ -57,3 +59,9 @@ class Request(object):
 
     def post(self, endpoint, json=None):
         return self._request(endpoint, 'post', 'json', data=json)
+
+    def delete(self, endpoint, kwargs=None):
+        return self._request(endpoint, 'delete', 'kwargs', data=kwargs)
+
+    def put(self, endpoint, json=None):
+        return self._request(endpoint, 'put', 'json', data=json)

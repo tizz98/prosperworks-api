@@ -1,18 +1,28 @@
 from . import api
-from . import exceptions
+from . import utils
 
 
 class Model(object):
-    _endpoint = NotImplemented
+    _endpoint = None
     _id_field = 'id'
 
     def __init__(self, id=None):
         setattr(self, self._id_field, id)
 
-    def populate(self, data=None):
-        data = data or api.requests.get(
-            self._endpoint + "/" + (getattr(self, self._id_field) or '')
+        if id is not None:
+            self.populate()
+
+    @property
+    def id_url(self):
+        return "{}/{}".format(
+            self._endpoint,
+            getattr(self, self._id_field) or ''
         )
+
+    def populate(self, data=None):
+        if self._endpoint is None and data is None:
+            return data
+        data = data or api.requests.get(self.id_url)
         for key, value in data.items():
             if getattr(self, key) is None:
                 setattr(self, key, value)
@@ -21,6 +31,10 @@ class Model(object):
                 if hasattr(other_cls, 'populate'):
                     setattr(self, key, other_cls.populate(value))
         return self
+
+    def delete(self):
+        response = api.requests.delete(self.id_url)
+        return utils.Data(**response)
 
     @classmethod
     def populate_list(cls, list_data=None):
@@ -41,6 +55,20 @@ class Model(object):
             setattr(obj, key, value)
         return obj
 
+    def get_fields(self):
+        return [
+            key for key in self.__dict__
+            if not key.startswith('_')
+        ]
+
+    def serialize(self):
+        return {
+            key: getattr(self, key)
+            if not hasattr(getattr(self, key), 'serialize')
+            else getattr(self, key).serialize()
+            for key in self.get_fields()
+        }
+
     def __unicode__(self):
         return repr(self)
 
@@ -49,8 +77,7 @@ class Model(object):
             self.__class__.__name__,
             u', '.join(
                 u"%s=%s" % (key, str(getattr(self, key)))
-                for key in self.__dict__
-                if not key.startswith('_')
+                for key in self.get_fields()
             )
         )
 
@@ -65,6 +92,9 @@ class ObjectList(object):
             self.model.from_simple_dict(obj) for obj in objects
         ]
 
+    def serialize(self):
+        return [obj.serialize() for obj in self.objects]
+
 
 class SimpleList(object):
     def __init__(self, objects=None):
@@ -72,6 +102,9 @@ class SimpleList(object):
 
     def populate(self, objects):
         self.objects = objects
+
+    def serialize(self):
+        return self.objects
 
 
 class Account(Model):
@@ -138,6 +171,21 @@ class Company(Model):
         'minimum_modified_date',
         'maximum_modified_date',
     )
+    _create_fields = (
+        'name',
+        'address',
+        'assignee_id',
+        'contact_type_id',
+        'details',
+        'email_domain',
+        'phone_numbers[]',
+        'socials[]',
+        'tags',
+        'websites[]',
+        'date_created',
+        'date_modified',
+        'custom_fields[]',
+    )
 
     id = None
     name = None
@@ -156,11 +204,17 @@ class Company(Model):
 
     @classmethod
     def search(cls, **query_fields):
-        for field in query_fields.keys():
-            if field not in cls._search_fields:
-                raise exceptions.ProsperWorksApplicationException(
-                    "%s is not a valid search field." % field
-                )
-
+        utils.validate_fields(query_fields, cls._search_fields, 'search')
         results = api.requests.post(cls._endpoint + "/search", query_fields)
         return cls.populate_list(list_data=results)
+
+    @classmethod
+    def create(cls, **create_fields):
+        utils.validate_fields(create_fields, cls._create_fields)
+        response = api.requests.post(cls._endpoint, json=create_fields)
+        return cls().populate(data=response)
+
+    def update(self):
+        data = self.serialize()
+        response = api.requests.put(self.id_url, json=data)
+        self.populate(data=response)
