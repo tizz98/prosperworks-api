@@ -36,7 +36,12 @@ class Request(object):
             except ValueError:
                 raise exceptions.ProsperWorksBadJson()
 
+    def _check_token_and_email(self):
+        if not self.access_token or not self.email:
+            raise exceptions.NotConfiguredException()
+
     def get(self, endpoint, params=None):
+        self._check_token_and_email()
         if params is None:
             params = {}
         url = constants.BASE_URL + endpoint
@@ -44,6 +49,7 @@ class Request(object):
         return self._check_response(response)
 
     def post(self, endpoint, json=None):
+        self._check_token_and_email()
         if json is None:
             json = {}
         url = constants.BASE_URL + endpoint

@@ -2,7 +2,15 @@ class BaseProsperWorksException(Exception):
     pass
 
 
-class ProsperWorksApplicationException(Exception):
+class NotConfiguredException(BaseProsperWorksException):
+    def __init__(self):
+        super(NotConfiguredException, self).__init__(
+            "Api not configured. Before making requests, invoke: "
+            "prosperworks.api.configure(KEY, EMAIL)."
+        )
+
+
+class ProsperWorksApplicationException(BaseProsperWorksException):
     pass
 
 
@@ -10,7 +18,7 @@ class ProsperWorksBadJson(ProsperWorksApplicationException):
     pass
 
 
-class ProsperWorksServerException(Exception):
+class ProsperWorksServerException(BaseProsperWorksException):
     def __init__(self, message, error_code):
         super(ProsperWorksServerException, self).__init__(message)
         self.error_code = error_code

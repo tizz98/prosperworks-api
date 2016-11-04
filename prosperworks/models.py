@@ -1,3 +1,7 @@
+from . import api
+from . import exceptions
+
+
 class Model(object):
     _endpoint = NotImplemented
     _id_field = 'id'
@@ -5,7 +9,7 @@ class Model(object):
     def __init__(self, id=None):
         setattr(self, self._id_field, id)
 
-    def populate(self, api, data=None):
+    def populate(self, data=None):
         data = data or api.requests.get(
             self._endpoint + "/" + (getattr(self, self._id_field) or '')
         )
@@ -14,8 +18,21 @@ class Model(object):
                 setattr(self, key, value)
             elif isinstance(getattr(self, key), object):
                 other_cls = getattr(self, key)
-                setattr(self, key, other_cls.populate(api, value))
+                if hasattr(other_cls, 'populate'):
+                    setattr(self, key, other_cls.populate(value))
         return self
+
+    @classmethod
+    def populate_list(cls, list_data=None):
+        objects = []
+        list_data = list_data or api.requests.get(cls._endpoint)
+
+        for data in list_data:
+            obj = cls()
+            obj.populate(data=data)
+            objects.append(obj)
+
+        return objects
 
     @classmethod
     def from_simple_dict(cls, simple_dict):
@@ -24,11 +41,14 @@ class Model(object):
             setattr(obj, key, value)
         return obj
 
+    def __unicode__(self):
+        return repr(self)
+
     def __repr__(self):
-        return "<%s: %s>" % (
+        return u"<%s: %s>" % (
             self.__class__.__name__,
-            ', '.join(
-                "%s=%s" % (key, str(getattr(self, key)))
+            u', '.join(
+                u"%s=%s" % (key, str(getattr(self, key)))
                 for key in self.__dict__
                 if not key.startswith('_')
             )
@@ -40,7 +60,7 @@ class ObjectList(object):
         self.model = model
         self.objects = objects or list()
 
-    def populate(self, api, objects):
+    def populate(self, objects):
         self.objects = [
             self.model.from_simple_dict(obj) for obj in objects
         ]
@@ -50,7 +70,7 @@ class SimpleList(object):
     def __init__(self, objects=None):
         self.objects = objects or list()
 
-    def populate(self, api, objects):
+    def populate(self, objects):
         self.objects = objects
 
 
@@ -59,6 +79,10 @@ class Account(Model):
 
     id = None
     name = None
+
+    @classmethod
+    def get_account(cls):
+        return cls().populate()
 
 
 class Address(Model):
@@ -93,6 +117,27 @@ class CustomField(Model):
 
 class Company(Model):
     _endpoint = "companies"
+    _search_fields = (
+        'page_number',
+        'page_size',
+        'sort_by',
+        'sort_direction',
+        'tags',
+        'age',
+        'assignee_ids',
+        'city',
+        'state',
+        'postal_code',
+        'country',
+        'minimum_interaction_count',
+        'maximum_interaction_count',
+        'minimum_interaction_date',
+        'maximum_interaction_date',
+        'minimum_created_date',
+        'maximum_created_date',
+        'minimum_modified_date',
+        'maximum_modified_date',
+    )
 
     id = None
     name = None
@@ -108,3 +153,14 @@ class Company(Model):
     date_created = None
     date_modified = None
     custom_fields = ObjectList(CustomField)
+
+    @classmethod
+    def search(cls, **query_fields):
+        for field in query_fields.keys():
+            if field not in cls._search_fields:
+                raise exceptions.ProsperWorksApplicationException(
+                    "%s is not a valid search field." % field
+                )
+
+        results = api.requests.post(cls._endpoint + "/search", query_fields)
+        return cls.populate_list(list_data=results)
