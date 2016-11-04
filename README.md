@@ -20,7 +20,7 @@ A python based api wrapper for [Prosperworks](https://www.prosperworks.com/devel
 - custom_fields (list of `prosperworks.models.CustomField`)
 
 #### Methods
-- search (search for companies), available kwargs are:
+- `search` (search for companies), available kwargs are:
   - page_number
   - page_size
   - sort_by
@@ -40,7 +40,7 @@ A python based api wrapper for [Prosperworks](https://www.prosperworks.com/devel
   - maximum_created_date
   - minimum_modified_date
   - maximum_modified_date
-- create (create new company), available kwargs are:
+- `create` (create new company), available kwargs are:
   - name
   - address
   - assignee_id
@@ -54,8 +54,8 @@ A python based api wrapper for [Prosperworks](https://www.prosperworks.com/devel
   - date_created
   - date_modified
   - custom_fields[]
-- update (update current company), _will use currently set values to update_
-- delete (delete current company)
+- `update` (update current company), _will use currently set values to update_
+- `delete` (delete current company)
 
 
 #### Examples:
