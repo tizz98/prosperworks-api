@@ -7,7 +7,7 @@ From source: `pip install git+git://github.com:tizz98/prosperworks-api.git@maste
 From pip: _coming soon_
 
 # Models
-### `prosperworks.models.Company`
+## `prosperworks.models.Company`
 #### Fields
 - id
 - name
