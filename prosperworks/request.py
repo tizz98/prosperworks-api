@@ -34,7 +34,11 @@ class Request(object):
                     u"Unknown error", response.status_code,
                 )
             )
-            raise exc_class
+            try:
+                data = response.json()
+                raise exc_class(message=data['message'])
+            except ValueError:
+                raise exc_class
         else:
             try:
                 return response.json()

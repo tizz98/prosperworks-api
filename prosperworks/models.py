@@ -286,5 +286,11 @@ class Lead(CRUDModel, SearchableModel):
                 'assignee_id': opportunity.assignee_id,
             }
 
-        response = api.requests.post(self._endpoint + "/convert", json=details)
+        url = self.id_url + "/convert"
+
+        if details:
+            response = api.requests.post(url, json={'details': details})
+        else:
+            response = api.requests.post(url)
+
         return utils.Data(**response)
