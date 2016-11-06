@@ -1,4 +1,4 @@
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 
 # Headers
 # values
@@ -10,5 +10,8 @@ ACCESS_TOKEN_HEADER = "X-PW-AccessToken"
 APPLICATION_HEADER = "X-PW-Application"
 EMAIL_HEADER = "X-PW-UserEmail"
 
-
-BASE_URL = "https://api.prosperworks.com/developer_api/v1/"
+# Order by most recent first, default will be API_VERSIONS[0]
+API_VERSIONS = (
+    "v1",
+)
+BASE_URL = "https://api.prosperworks.com/developer_api/{version}/"

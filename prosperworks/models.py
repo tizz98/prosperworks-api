@@ -2,7 +2,7 @@ from . import api
 from . import utils
 
 
-class Model(object):
+class Model(utils.QuickRepr):
     _endpoint = None
     _id_field = 'id'
 
@@ -24,22 +24,20 @@ class Model(object):
             return data
         data = data or api.requests.get(self.id_url)
         for key, value in data.items():
-            if getattr(self, key) is None:
+            current_value = getattr(self, key, None)
+            if current_value is None:
                 setattr(self, key, value)
-            elif isinstance(getattr(self, key), object):
-                other_cls = getattr(self, key)
-                if hasattr(other_cls, 'populate'):
-                    setattr(self, key, other_cls.populate(value))
+            elif isinstance(current_value, object):
+                if hasattr(current_value, 'populate'):
+                    setattr(self, key, current_value.populate(value))
         return self
-
-    def delete(self):
-        response = api.requests.delete(self.id_url)
-        return utils.Data(**response)
 
     @classmethod
     def populate_list(cls, list_data=None):
         objects = []
-        list_data = list_data or api.requests.get(cls._endpoint)
+
+        if list_data is None:
+            list_data = api.requests.get(cls._endpoint)
 
         for data in list_data:
             obj = cls()
@@ -55,12 +53,6 @@ class Model(object):
             setattr(obj, key, value)
         return obj
 
-    def get_fields(self):
-        return [
-            key for key in self.__dict__
-            if not key.startswith('_')
-        ]
-
     def serialize(self):
         return {
             key: getattr(self, key)
@@ -69,20 +61,49 @@ class Model(object):
             for key in self.get_fields()
         }
 
-    def __unicode__(self):
-        return repr(self)
 
-    def __repr__(self):
-        return u"<%s: %s>" % (
-            self.__class__.__name__,
-            u', '.join(
-                u"%s=%s" % (key, str(getattr(self, key)))
-                for key in self.get_fields()
-            )
-        )
+class CRUDModel(Model):
+    """
+    A Model that can be created (.create), retrieved (__init__),
+    updated (.update) & deleted (.delete)
+    """
+    _create_fields = tuple()
+
+    def delete(self):
+        response = api.requests.delete(self.id_url)
+        return utils.Data(**response)
+
+    @classmethod
+    def create(cls, **create_fields):
+        utils.validate_fields(create_fields, cls._create_fields)
+        response = api.requests.post(cls._endpoint, json=create_fields)
+        return cls().populate(data=response)
+
+    def update(self):
+        data = self.serialize()
+        response = api.requests.put(self.id_url, json=data)
+        self.populate(data=response)
 
 
-class ObjectList(object):
+class SearchableModel(Model):
+    """
+    A Model that is searchable via .search
+    """
+    _search_fields = tuple()
+    _search_path = 'search'
+
+    @classmethod
+    def search_endpoint(cls):
+        return "{}/{}".format(cls._endpoint, cls._search_path)
+
+    @classmethod
+    def search(cls, **query_fields):
+        utils.validate_fields(query_fields, cls._search_fields, 'search')
+        results = api.requests.post(cls.search_endpoint(), query_fields)
+        return cls.populate_list(list_data=results)
+
+
+class ObjectList(utils.QuickRepr):
     def __init__(self, model, objects=None):
         self.model = model
         self.objects = objects or list()
@@ -96,7 +117,7 @@ class ObjectList(object):
         return [obj.serialize() for obj in self.objects]
 
 
-class SimpleList(object):
+class SimpleList(utils.QuickRepr):
     def __init__(self, objects=None):
         self.objects = objects or list()
 
@@ -148,7 +169,7 @@ class CustomField(Model):
     value = None
 
 
-class Company(Model):
+class Company(CRUDModel, SearchableModel):
     _endpoint = "companies"
     _search_fields = (
         'page_number',
@@ -202,19 +223,93 @@ class Company(Model):
     date_modified = None
     custom_fields = ObjectList(CustomField)
 
-    @classmethod
-    def search(cls, **query_fields):
-        utils.validate_fields(query_fields, cls._search_fields, 'search')
-        results = api.requests.post(cls._endpoint + "/search", query_fields)
-        return cls.populate_list(list_data=results)
 
-    @classmethod
-    def create(cls, **create_fields):
-        utils.validate_fields(create_fields, cls._create_fields)
-        response = api.requests.post(cls._endpoint, json=create_fields)
-        return cls().populate(data=response)
+class Lead(CRUDModel, SearchableModel):
+    _endpoint = "leads"
+    _search_fields = (
+        'page_number',
+        'page_size',
+        'sort_by',
+        'sort_direction',
+        'tags',
+        'age',
+        'assignee_ids',
+        'city',
+        'state',
+        'postal_code',
+        'country',
+        'minimum_interaction_count',
+        'maximum_interaction_count',
+        'minimum_interaction_date',
+        'maximum_interaction_date',
+        'minimum_created_date',
+        'maximum_created_date',
+        'minimum_modified_date',
+        'maximum_modified_date',
+    )
+    _create_fields = (
+        'name',
+        'address',
+        'assignee_id',
+        'company_name',
+        'customer_source_id',
+        'details',
+        'email',
+        'monetary_value',
+        'phone_numbers[]',
+        'socials[]',
+        'status',
+        'tags',
+        'title',
+        'websites[]',
+        'date_created',
+        'date_modified',
+        'custom_fields[]',
+    )
 
-    def update(self):
-        data = self.serialize()
-        response = api.requests.put(self.id_url, json=data)
-        self.populate(data=response)
+    id = None
+    name = None
+    address = Address()
+    assignee_id = None
+    company_name = None
+    customer_source_id = None
+    details = None
+    email = None
+    monetary_value = None
+    phone_numbers = ObjectList(PhoneNumber)
+    socials = ObjectList(Social)
+    status = None
+    tags = SimpleList()
+    title = None
+    websites = ObjectList(Website)
+    date_created = None
+    date_modified = None
+    custom_fields = ObjectList(CustomField)
+
+    def convert(self, person=None, company=None, opportunity=None):
+        details = {}
+
+        if person:
+            details['person'] = {
+                'name': person.name,
+                'contact_type_id': person.contact_type_id,
+                'assignee_id': person.assignee_id,
+            }
+        if company:
+            details['company'] = {
+                'id': company.id,
+            }
+        if opportunity:
+            details['opportunity'] = {
+                'name': opportunity.name,
+                'pipeline_id': opportunity.pipeline_id,
+                'monetary_value': opportunity.monetary_value,
+                'assignee_id': opportunity.assignee_id,
+            }
+
+        response = api.requests.post(
+            self.id_url + "/convert",
+            json={'details': details}
+        )
+
+        return utils.Data(**response)
