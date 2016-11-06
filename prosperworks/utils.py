@@ -19,7 +19,30 @@ def timestamp(dt, convert_to_int=True):
     return int(stamp) if convert_to_int else stamp
 
 
-class Data(object):
+class QuickRepr(object):
+    def get_fields(self):
+        return [
+            key for key in self.__dict__
+            if not key.startswith('_')
+        ]
+
+    def __unicode__(self):
+        return repr(self)
+
+    def __repr__(self):
+        return u"<%s: %s>" % (
+            self.__class__.__name__,
+            u', '.join(
+                u"%s=%s" % (key, str(getattr(self, key)))
+                for key in self.get_fields()
+            )
+        )
+
+
+class Data(QuickRepr):
+    """Utility class to wrap a dict as an object."""
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
+            if isinstance(value, dict):
+                value = Data(**value)
             setattr(self, key, value)

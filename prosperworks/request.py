@@ -7,9 +7,14 @@ from . import exceptions
 class Request(object):
     _headers = None
 
-    def __init__(self, access_token, email):
+    def __init__(self, access_token, email, api_version):
         self.access_token = access_token
         self.email = email
+        self.api_version = api_version
+
+    @property
+    def base_url(self):
+        return constants.BASE_URL.format(version=self.api_version)
 
     @property
     def headers(self):
@@ -44,7 +49,7 @@ class Request(object):
         self._check_token_and_email()
         if data is None:
             data = {}
-        url = constants.BASE_URL + endpoint
+        url = self.base_url + endpoint
 
         if data_kw_name == 'kwargs':
             kw = data
