@@ -226,6 +226,27 @@ class Company(CRUDModel, SearchableModel):
 
 class Lead(CRUDModel, SearchableModel):
     _endpoint = "leads"
+    _search_fields = (
+        'page_number',
+        'page_size',
+        'sort_by',
+        'sort_direction',
+        'tags',
+        'age',
+        'assignee_ids',
+        'city',
+        'state',
+        'postal_code',
+        'country',
+        'minimum_interaction_count',
+        'maximum_interaction_count',
+        'minimum_interaction_date',
+        'maximum_interaction_date',
+        'minimum_created_date',
+        'maximum_created_date',
+        'minimum_modified_date',
+        'maximum_modified_date',
+    )
     _create_fields = (
         'name',
         'address',
