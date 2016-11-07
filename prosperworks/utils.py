@@ -46,3 +46,26 @@ class Data(QuickRepr):
             if isinstance(value, dict):
                 value = Data(**value)
             setattr(self, key, value)
+
+
+class lazy_property(object):
+    """
+    Decorator to lazy load FK-like attributes. This means the request won't be
+    sent until the attribute is accessed.
+
+    Ex:
+    opportunity = Opportunity(123)
+    print opportunity.company_id  # 12
+    # opportunity.company does not have a value yet
+    print opportunity.company.name  # sends request to get company
+    """
+    def __init__(self, func):
+        self.func = func
+        self.func_name = func.__name__
+
+    def __get__(self, obj, cls):
+        if obj is None:
+            return None
+        value = self.func(obj)
+        setattr(obj, self.func_name, value)
+        return value
