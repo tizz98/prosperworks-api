@@ -5,6 +5,7 @@ from . import utils
 class Model(utils.QuickRepr):
     _endpoint = None
     _id_field = 'id'
+    _lazy_props = tuple()
 
     def __init__(self, id=None):
         setattr(self, self._id_field, id)
@@ -59,6 +60,7 @@ class Model(utils.QuickRepr):
             if not hasattr(getattr(self, key), 'serialize')
             else getattr(self, key).serialize()
             for key in self.get_fields()
+            if key not in self._lazy_props
         }
 
 
@@ -149,6 +151,11 @@ class Address(Model):
 
 class PhoneNumber(Model):
     number = None
+    category = None
+
+
+class Email(Model):
+    email = None
     category = None
 
 
@@ -316,6 +323,7 @@ class Lead(CRUDModel, SearchableModel):
 
 
 class Opportunity(CRUDModel, SearchableModel):
+    _endpoint = "opportunities"
     _search_fields = (
         'page_number',
         'page_size',
@@ -343,7 +351,6 @@ class Opportunity(CRUDModel, SearchableModel):
         'minimum_modified_date',
         'maximum_modified_date',
     )
-    _endpoint = "opportunities"
     _create_fields = (
         'name',
         'primary_contact_id',
@@ -360,6 +367,9 @@ class Opportunity(CRUDModel, SearchableModel):
         'tags',
         'win_probability',
         'custom_fields[]',
+    )
+    _lazy_props = (
+        'company',
     )
 
     id = None
@@ -379,6 +389,73 @@ class Opportunity(CRUDModel, SearchableModel):
     status = None
     tags = SimpleList()
     win_probability = None
+    date_created = None
+    date_modified = None
+    custom_fields = ObjectList(CustomField)
+
+    @utils.lazy_property
+    def company(self):
+        return Company(self.company_id)
+
+
+class Person(CRUDModel, SearchableModel):
+    _endpoint = "people"
+    _search_fields = (
+        'page_number',
+        'page_size',
+        'sort_by',
+        'sort_direction',
+        'tags',
+        'age',
+        'assignee_ids',
+        'city',
+        'state',
+        'postal_code',
+        'country',
+        'minimum_interaction_count',
+        'maximum_interaction_count',
+        'minimum_interaction_date',
+        'maximum_interaction_date',
+        'minimum_created_date',
+        'maximum_created_date',
+        'minimum_modified_date',
+        'maximum_modified_date',
+    )
+    _create_fields = (
+        'name',
+        'address',
+        'assignee_id',
+        'company_id',
+        'contact_type_id',
+        'details',
+        'emails[]',
+        'phone_numbers[]',
+        'socials[]',
+        'tags',
+        'title',
+        'websites[]',
+        'date_created',
+        'date_modified',
+        'custom_fields[]',
+    )
+    _lazy_props = (
+        'company',
+    )
+
+    id = None
+    name = None
+    address = Address()
+    assignee_id = None
+    company_id = None
+    company_name = None
+    contact_type_id = None
+    details = None
+    emails = ObjectList(Email)
+    phone_numbers = ObjectList(PhoneNumber)
+    socials = ObjectList(Social)
+    tags = SimpleList()
+    title = None
+    websites = ObjectList(Website)
     date_created = None
     date_modified = None
     custom_fields = ObjectList(CustomField)
