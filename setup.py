@@ -25,7 +25,7 @@ setup(
     ),
     author='Elijah Wilson',
     author_email='elijah@elijahwilson.me',
-    license='GNU General Public License v3.0',
+    license='MIT',
     packages=['prosperworks'],
     keywords="prosperworks api",
     zip_safe=True,
