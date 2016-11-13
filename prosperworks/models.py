@@ -105,6 +105,17 @@ class SearchableModel(Model):
         return cls.populate_list(list_data=results)
 
 
+class ListableModel(Model):
+    """
+    A Model that is listable via .list
+    """
+
+    @classmethod
+    def list(cls):
+        results = api.requests.get(cls._endpoint)
+        return cls.populate_list(list_data=results)
+
+
 class ObjectList(utils.QuickRepr):
     def __init__(self, model, objects=None):
         self.model = model
@@ -463,3 +474,11 @@ class Person(CRUDModel, SearchableModel):
     @utils.lazy_property
     def company(self):
         return Company(self.company_id)
+
+
+class User(CRUDModel, ListableModel):
+    _endpoint = "users"
+
+    id = None
+    name = None
+    email = None
