@@ -87,7 +87,18 @@ class CRUDModel(Model):
         self.populate(data=response)
 
 
-class SearchableModel(Model):
+class ListableModel(Model):
+    """
+    A Model that is listable via .list
+    """
+
+    @classmethod
+    def list(cls):
+        results = api.requests.get(cls._endpoint)
+        return cls.populate_list(list_data=results)
+
+
+class SearchableModel(ListableModel):
     """
     A Model that is searchable via .search
     """
@@ -104,16 +115,9 @@ class SearchableModel(Model):
         results = api.requests.post(cls.search_endpoint(), query_fields)
         return cls.populate_list(list_data=results)
 
-
-class ListableModel(Model):
-    """
-    A Model that is listable via .list
-    """
-
     @classmethod
     def list(cls):
-        results = api.requests.get(cls._endpoint)
-        return cls.populate_list(list_data=results)
+        return cls.search()
 
 
 class ObjectList(utils.QuickRepr):
