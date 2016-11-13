@@ -87,7 +87,18 @@ class CRUDModel(Model):
         self.populate(data=response)
 
 
-class SearchableModel(Model):
+class ListableModel(Model):
+    """
+    A Model that is listable via .list
+    """
+
+    @classmethod
+    def list(cls):
+        results = api.requests.get(cls._endpoint)
+        return cls.populate_list(list_data=results)
+
+
+class SearchableModel(ListableModel):
     """
     A Model that is searchable via .search
     """
@@ -103,6 +114,10 @@ class SearchableModel(Model):
         utils.validate_fields(query_fields, cls._search_fields, 'search')
         results = api.requests.post(cls.search_endpoint(), query_fields)
         return cls.populate_list(list_data=results)
+
+    @classmethod
+    def list(cls):
+        return cls.search()
 
 
 class ObjectList(utils.QuickRepr):
@@ -463,3 +478,11 @@ class Person(CRUDModel, SearchableModel):
     @utils.lazy_property
     def company(self):
         return Company(self.company_id)
+
+
+class User(CRUDModel, ListableModel):
+    _endpoint = "users"
+
+    id = None
+    name = None
+    email = None
