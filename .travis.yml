@@ -3,8 +3,11 @@ python:
     - "2.7"
 install:
     - "pip install -r requirements-dev.txt"
-    - "pip uninstall pypandoc -y"
     - "pip install ."
 script:
   - "flake8 --exclude=__init__.py prosperworks"
   - "tox"
+addons:
+  apt:
+    packages:
+      - pandoc
