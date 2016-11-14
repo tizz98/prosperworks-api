@@ -1,5 +1,5 @@
 # Prosperworks Api
-A python based api wrapper for [Prosperworks](https://www.prosperworks.com/developer_api).
+A python based api wrapper for [Prosperworks](https://www.prosperworks.com/developer_api). [![Build Status](https://travis-ci.org/tizz98/prosperworks-api.svg)](https://travis-ci.org/tizz98/prosperworks-api)
 
 ## Installation
 From pip (recommended): `pip install prosperworks`

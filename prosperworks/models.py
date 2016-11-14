@@ -28,9 +28,10 @@ class Model(utils.QuickRepr):
             current_value = getattr(self, key, None)
             if current_value is None:
                 setattr(self, key, value)
-            elif isinstance(current_value, object):
+            elif isinstance(current_value, object) and callable(current_value):
                 if hasattr(current_value, 'populate'):
-                    setattr(self, key, current_value.populate(value))
+                    new_value = current_value()
+                    setattr(self, key, new_value.populate(value))
         return self
 
     @classmethod
@@ -120,7 +121,7 @@ class SearchableModel(ListableModel):
         return cls.search()
 
 
-class ObjectList(utils.QuickRepr):
+class ObjectList(utils.QuickRepr, utils.AbstractMixin):
     def __init__(self, model, objects=None):
         self.model = model
         self.objects = objects or list()
@@ -129,20 +130,46 @@ class ObjectList(utils.QuickRepr):
         self.objects = [
             self.model.from_simple_dict(obj) for obj in objects
         ]
+        return self
 
     def serialize(self):
         return [obj.serialize() for obj in self.objects]
 
+    def __iter__(self):
+        return self.objects.__iter__()
 
-class SimpleList(utils.QuickRepr):
+    def __call__(self, *args, **kwargs):
+        return super(ObjectList, self).__call__(self.model, *args, **kwargs)
+
+
+class SimpleList(utils.QuickRepr, utils.AbstractMixin):
     def __init__(self, objects=None):
         self.objects = objects or list()
 
     def populate(self, objects):
         self.objects = objects
+        return self
 
     def serialize(self):
         return self.objects
+
+    def __iter__(self):
+        return self.objects.__iter__()
+
+
+class SimpleObject(utils.Data, utils.AbstractMixin):
+    _raw = {}
+
+    def __init__(self, **kwargs):
+        super(SimpleObject, self).__init__(**kwargs)
+        self._raw = kwargs
+
+    def populate(self, data=None):
+        self._raw = data or {}
+        return super(SimpleObject, self).populate(data)
+
+    def serialize(self):
+        return self._raw
 
 
 class Account(Model):
@@ -156,7 +183,7 @@ class Account(Model):
         return cls().populate()
 
 
-class Address(Model):
+class Address(Model, utils.AbstractMixin):
     street = None
     city = None
     state = None
@@ -244,6 +271,10 @@ class Company(CRUDModel, SearchableModel):
     date_created = None
     date_modified = None
     custom_fields = ObjectList(CustomField)
+
+    @utils.lazy_property
+    def assignee(self):
+        return User(self.assignee_id)
 
 
 class Lead(CRUDModel, SearchableModel):
@@ -336,6 +367,10 @@ class Lead(CRUDModel, SearchableModel):
 
         return utils.Data(**response)
 
+    @utils.lazy_property
+    def assignee(self):
+        return User(self.assignee_id)
+
 
 class Opportunity(CRUDModel, SearchableModel):
     _endpoint = "opportunities"
@@ -412,6 +447,10 @@ class Opportunity(CRUDModel, SearchableModel):
     def company(self):
         return Company(self.company_id)
 
+    @utils.lazy_property
+    def assignee(self):
+        return User(self.assignee_id)
+
 
 class Person(CRUDModel, SearchableModel):
     _endpoint = "people"
@@ -479,6 +518,10 @@ class Person(CRUDModel, SearchableModel):
     def company(self):
         return Company(self.company_id)
 
+    @utils.lazy_property
+    def assignee(self):
+        return User(self.assignee_id)
+
 
 class User(CRUDModel, ListableModel):
     _endpoint = "users"
@@ -486,3 +529,26 @@ class User(CRUDModel, ListableModel):
     id = None
     name = None
     email = None
+
+
+class Task(CRUDModel, SearchableModel):
+    _endpoint = "tasks"
+
+    id = None
+    name = None
+    related_resource = SimpleObject
+    assignee_id = None
+    due_date = None
+    reminder_date = None
+    completed_date = None
+    priority = None
+    status = None
+    details = None
+    tags = SimpleList
+    custom_fields = ObjectList(CustomField)
+    date_created = None
+    date_modified = None
+
+    @utils.lazy_property
+    def assignee(self):
+        return User(self.assignee_id)
