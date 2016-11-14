@@ -42,10 +42,16 @@ class QuickRepr(object):
 class Data(QuickRepr):
     """Utility class to wrap a dict as an object."""
     def __init__(self, **kwargs):
-        for key, value in kwargs.items():
+        self.populate(kwargs)
+
+    def populate(self, data=None):
+        if data is None:
+            data = {}
+        for key, value in data.items():
             if isinstance(value, dict):
                 value = Data(**value)
             setattr(self, key, value)
+        return self
 
 
 class lazy_property(object):
@@ -54,10 +60,11 @@ class lazy_property(object):
     sent until the attribute is accessed.
 
     Ex:
-    opportunity = Opportunity(123)
-    print opportunity.company_id  # 12
-    # opportunity.company does not have a value yet
-    print opportunity.company.name  # sends request to get company
+    >>> from prosperworks.models import Opportunity
+    >>> opportunity = Opportunity(123)
+    >>> print opportunity.company_id  # 12
+    >>> # opportunity.company does not have a value yet
+    >>> print opportunity.company.name  # sends request to get company
     """
     def __init__(self, func):
         self.func = func
@@ -69,3 +76,8 @@ class lazy_property(object):
         value = self.func(obj)
         setattr(obj, self.func_name, value)
         return value
+
+
+class AbstractMixin(object):
+    def __call__(self, *args, **kwargs):
+        return self.__class__(*args, **kwargs)
