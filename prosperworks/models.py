@@ -145,6 +145,22 @@ class SimpleList(utils.QuickRepr):
         return self.objects
 
 
+class SimpleObject(utils.Data):
+    _raw = {}
+
+    def __init__(self, **kwargs):
+        super(SimpleObject, self).__init__(**kwargs)
+        self._raw = kwargs
+
+    def populate(self, data=None):
+        if data is None:
+            data = {}
+        return self.__init__(**data)
+
+    def serialize(self):
+        return self._raw
+
+
 class Account(Model):
     _endpoint = "account"
 
@@ -245,6 +261,10 @@ class Company(CRUDModel, SearchableModel):
     date_modified = None
     custom_fields = ObjectList(CustomField)
 
+    @utils.lazy_property
+    def assignee(self):
+        return User(self.assignee_id)
+
 
 class Lead(CRUDModel, SearchableModel):
     _endpoint = "leads"
@@ -336,6 +356,10 @@ class Lead(CRUDModel, SearchableModel):
 
         return utils.Data(**response)
 
+    @utils.lazy_property
+    def assignee(self):
+        return User(self.assignee_id)
+
 
 class Opportunity(CRUDModel, SearchableModel):
     _endpoint = "opportunities"
@@ -412,6 +436,10 @@ class Opportunity(CRUDModel, SearchableModel):
     def company(self):
         return Company(self.company_id)
 
+    @utils.lazy_property
+    def assignee(self):
+        return User(self.assignee_id)
+
 
 class Person(CRUDModel, SearchableModel):
     _endpoint = "people"
@@ -479,6 +507,10 @@ class Person(CRUDModel, SearchableModel):
     def company(self):
         return Company(self.company_id)
 
+    @utils.lazy_property
+    def assignee(self):
+        return User(self.assignee_id)
+
 
 class User(CRUDModel, ListableModel):
     _endpoint = "users"
@@ -486,3 +518,26 @@ class User(CRUDModel, ListableModel):
     id = None
     name = None
     email = None
+
+
+class Task(CRUDModel, SearchableModel):
+    _endpoint = "tasks"
+
+    id = None
+    name = None
+    related_resource = SimpleObject()
+    assignee_id = None
+    due_date = None
+    reminder_date = None
+    completed_date = None
+    priority = None
+    status = None
+    details = None
+    tags = SimpleList()
+    custom_fields = ObjectList(CustomField)
+    date_created = None
+    date_modified = None
+
+    @utils.lazy_property
+    def assignee(self):
+        return User(self.assignee_id)
