@@ -20,8 +20,8 @@ class Cache(object):
     def set(self, key, value):
         self._cache[key] = (value, time.time())
 
-    def get_or_set(self, key, func, default=None):
-        value = self.get(key, default=default)
+    def get_or_set(self, key, func):
+        value = self.get(key)
         if not value:
             value = func()
             self.set(key, value)
