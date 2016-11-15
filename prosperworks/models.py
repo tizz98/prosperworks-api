@@ -536,7 +536,7 @@ class Person(CRUDModel, SearchableModel):
         return User(self.assignee_id)
 
 
-class User(CRUDModel, ListableModel):
+class User(ListableModel):
     _endpoint = "users"
 
     id = None
@@ -548,6 +548,39 @@ class Task(CRUDModel, SearchableModel):
     _endpoint = "tasks"
     _lazy_props = (
         'assignee',
+    )
+    _search_fields = (
+        'page_number',
+        'page_size',
+        'sort_by',
+        'sort_direction',
+        'name',
+        'assignee_ids',
+        'statuses',
+        'priorities',
+        'tags',
+        'minimum_due_date',
+        'maximum_due_date',
+        'minimum_reminder_date',
+        'maximum_reminder_date',
+        'minimum_completed_date',
+        'maximum_completed_date',
+        'minimum_created_date',
+        'maximum_created_date',
+        'minimum_modified_date',
+        'maximum_modified_date',
+    )
+    _create_fields = (
+        'name',
+        'related_resource',
+        'assignee_id',
+        'due_date',
+        'reminder_date',
+        'priority',
+        'status',
+        'details',
+        'tags',
+        'custom_fields[]',
     )
 
     id = None
