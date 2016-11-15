@@ -507,6 +507,7 @@ class Person(CRUDModel, SearchableModel):
     _lazy_props = (
         'company',
         'assignee',
+        'contact_type',
     )
 
     id = None
@@ -534,6 +535,21 @@ class Person(CRUDModel, SearchableModel):
     @utils.lazy_property
     def assignee(self):
         return User(self.assignee_id)
+
+    @utils.lazy_property
+    def contact_type(self):
+        if self.contact_type_id:
+            contact_types = api.cache.get_or_set(
+                "contact_types",
+                lambda: ContactType.list()
+            )
+            results = filter(
+                lambda x: x.id == self.contact_type_id,
+                contact_types
+            )
+            if len(results) == 1:
+                return results[0]
+        return None
 
 
 class User(ListableModel):
@@ -646,3 +662,56 @@ class Project(CRUDModel, SearchableModel):
     @utils.lazy_property
     def assignee(self):
         return User(self.assignee_id)
+
+
+class CustomerSource(ListableModel):
+    _endpoint = "customer_sources"
+
+    id = None
+    name = None
+
+
+class LossReason(ListableModel):
+    _endpoint = "loss_reasons"
+
+    id = None
+    name = None
+
+
+class PipelineStage(ListableModel):
+    _endpoint = "pipeline_stages"
+    _lazy_props = (
+        'pipeline',
+    )
+
+    id = None
+    name = None
+    pipeline_id = None
+    win_probability = None
+
+    @utils.lazy_property
+    def pipeline(self):
+        if self.pipeline_id:
+            pipelines = api.cache.get_or_set(
+                "pipelines",
+                lambda: Pipeline.list()
+            )
+            results = filter(lambda x: x.id == self.pipeline_id, pipelines)
+            if len(results) == 1:
+                return results[0]
+        return None
+
+
+class Pipeline(ListableModel):
+    _endpoint = "pipelines"
+
+    id = None
+    name = None
+    stages = ObjectList(PipelineStage)
+
+
+class ContactType(ListableModel):
+    _endpoint = "contact_types"
+
+    id = None
+    name = None

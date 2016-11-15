@@ -1,4 +1,4 @@
-__version__ = "0.0.6"
+__version__ = "0.1.0"
 
 # Headers
 # values
@@ -15,3 +15,6 @@ API_VERSIONS = (
     "v1",
 )
 BASE_URL = "https://api.prosperworks.com/developer_api/{version}/"
+
+
+CACHE_LIFE = 60 * 60  # 1 hour
