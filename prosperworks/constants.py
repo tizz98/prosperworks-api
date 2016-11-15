@@ -15,3 +15,6 @@ API_VERSIONS = (
     "v1",
 )
 BASE_URL = "https://api.prosperworks.com/developer_api/{version}/"
+
+
+CACHE_LIFE = 60 * 60  # 1 hour
