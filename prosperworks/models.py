@@ -256,6 +256,9 @@ class Company(CRUDModel, SearchableModel):
         'date_modified',
         'custom_fields[]',
     )
+    _lazy_props = (
+        'assignee',
+    )
 
     id = None
     name = None
@@ -318,6 +321,9 @@ class Lead(CRUDModel, SearchableModel):
         'date_created',
         'date_modified',
         'custom_fields[]',
+    )
+    _lazy_props = (
+        'assignee',
     )
 
     id = None
@@ -420,6 +426,8 @@ class Opportunity(CRUDModel, SearchableModel):
     )
     _lazy_props = (
         'company',
+        'assignee',
+        'primary_contact',
     )
 
     id = None
@@ -450,6 +458,10 @@ class Opportunity(CRUDModel, SearchableModel):
     @utils.lazy_property
     def assignee(self):
         return User(self.assignee_id)
+
+    @utils.lazy_property
+    def primary_contact(self):
+        return Person(self.primary_contact_id)
 
 
 class Person(CRUDModel, SearchableModel):
@@ -494,6 +506,7 @@ class Person(CRUDModel, SearchableModel):
     )
     _lazy_props = (
         'company',
+        'assignee',
     )
 
     id = None
@@ -533,6 +546,9 @@ class User(CRUDModel, ListableModel):
 
 class Task(CRUDModel, SearchableModel):
     _endpoint = "tasks"
+    _lazy_props = (
+        'assignee',
+    )
 
     id = None
     name = None
@@ -542,6 +558,51 @@ class Task(CRUDModel, SearchableModel):
     reminder_date = None
     completed_date = None
     priority = None
+    status = None
+    details = None
+    tags = SimpleList
+    custom_fields = ObjectList(CustomField)
+    date_created = None
+    date_modified = None
+
+    @utils.lazy_property
+    def assignee(self):
+        return User(self.assignee_id)
+
+
+class Project(CRUDModel, SearchableModel):
+    _endpoint = "projects"
+    _search_fields = (
+        'page_number',
+        'page_size',
+        'sort_by',
+        'sort_direction',
+        'name',
+        'assignee_ids',
+        'statuses',
+        'tags',
+        'minimum_created_date',
+        'maximum_created_date',
+        'minimum_modified_date',
+        'maximum_modified_date',
+    )
+    _create_fields = (
+        'name',
+        'related_resource',
+        'assignee_id',
+        'status',
+        'details',
+        'tags',
+        'custom_fields[]',
+    )
+    _lazy_props = (
+        'assignee',
+    )
+
+    id = None
+    name = None
+    related_resource = SimpleObject
+    assignee_id = None
     status = None
     details = None
     tags = SimpleList
