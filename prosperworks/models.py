@@ -248,13 +248,13 @@ class Company(CRUDModel, SearchableModel):
         'contact_type_id',
         'details',
         'email_domain',
-        'phone_numbers[]',
-        'socials[]',
+        'phone_numbers,
+        'socials,
         'tags',
-        'websites[]',
+        'websites,
         'date_created',
         'date_modified',
-        'custom_fields[]',
+        'custom_fields,
     )
     _lazy_props = (
         'assignee',
@@ -312,15 +312,15 @@ class Lead(CRUDModel, SearchableModel):
         'details',
         'email',
         'monetary_value',
-        'phone_numbers[]',
-        'socials[]',
+        'phone_numbers,
+        'socials,
         'status',
         'tags',
         'title',
-        'websites[]',
+        'websites,
         'date_created',
         'date_modified',
-        'custom_fields[]',
+        'custom_fields,
     )
     _lazy_props = (
         'assignee',
@@ -422,7 +422,7 @@ class Opportunity(CRUDModel, SearchableModel):
         'status',
         'tags',
         'win_probability',
-        'custom_fields[]',
+        'custom_fields,
     )
     _lazy_props = (
         'company',
@@ -494,15 +494,15 @@ class Person(CRUDModel, SearchableModel):
         'company_id',
         'contact_type_id',
         'details',
-        'emails[]',
-        'phone_numbers[]',
-        'socials[]',
+        'emails,
+        'phone_numbers,
+        'socials,
         'tags',
         'title',
-        'websites[]',
+        'websites,
         'date_created',
         'date_modified',
-        'custom_fields[]',
+        'custom_fields,
     )
     _lazy_props = (
         'company',
@@ -596,7 +596,7 @@ class Task(CRUDModel, SearchableModel):
         'status',
         'details',
         'tags',
-        'custom_fields[]',
+        'custom_fields,
     )
 
     id = None
@@ -642,7 +642,7 @@ class Project(CRUDModel, SearchableModel):
         'status',
         'details',
         'tags',
-        'custom_fields[]',
+        'custom_fields,
     )
     _lazy_props = (
         'assignee',
