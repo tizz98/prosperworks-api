@@ -211,11 +211,14 @@ class Website(Model):
     category = None
 
 
-class CustomField(Model):
+class CustomField(ListableModel):
+    _endpoint = "custom_field_definitions"
     _id_field = 'custom_field_definition_id'
 
     custom_field_definition_id = None
     value = None
+    name = None
+    data_type = None
 
 
 class Company(CRUDModel, SearchableModel):
