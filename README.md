@@ -151,7 +151,7 @@ new_co.delete()
 #### Examples:
 ```python
 from prosperworks import api
-from prosperworks.models import Company
+from prosperworks.models import Company, Lead
 
 api.configure('key', 'your.name@example.com')
 
