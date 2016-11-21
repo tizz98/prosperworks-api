@@ -414,6 +414,7 @@ class Opportunity(CRUDModel, SearchableModel):
         'name',
         'primary_contact_id',
         'assignee_id',
+        'company_id',
         'close_date',
         'customer_source_id',
         'details',
