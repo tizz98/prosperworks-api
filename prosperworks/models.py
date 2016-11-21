@@ -55,12 +55,13 @@ class Model(utils.QuickRepr):
             setattr(obj, key, value)
         return obj
 
-    def serialize(self):
+    def serialize(self, *fields):
+        fields = fields or self.get_fields()
         return {
             key: getattr(self, key)
             if not hasattr(getattr(self, key), 'serialize')
             else getattr(self, key).serialize()
-            for key in self.get_fields()
+            for key in fields
             if key not in self._lazy_props
         }
 
@@ -82,8 +83,8 @@ class CRUDModel(Model):
         response = api.requests.post(cls._endpoint, json=create_fields)
         return cls().populate(data=response)
 
-    def update(self):
-        data = self.serialize()
+    def update(self, *fields):
+        data = self.serialize(*fields)
         response = api.requests.put(self.id_url, json=data)
         self.populate(data=response)
 
@@ -414,6 +415,7 @@ class Opportunity(CRUDModel, SearchableModel):
         'name',
         'primary_contact_id',
         'assignee_id',
+        'company_id',
         'close_date',
         'customer_source_id',
         'details',
