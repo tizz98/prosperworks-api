@@ -556,6 +556,19 @@ class Person(CRUDModel, SearchableModel):
                 return results[0]
         return None
 
+    @classmethod
+    def fetch_by_email(cls, email):
+        """
+        Note: If a Person with the email is not found, this endpoint will
+        return a 404 and thus this api wrapper will raise
+        prosperworks.exceptions.ProsperWorksNotFoundRequest
+        """
+        data = api.requests.post(cls._endpoint + "/fetch_by_email", json={
+            'email': email
+        })
+        person = cls()
+        return person.populate(data=data)
+
 
 class User(ListableModel):
     _endpoint = "users"
