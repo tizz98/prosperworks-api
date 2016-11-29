@@ -283,6 +283,21 @@ class Company(CRUDModel, SearchableModel):
     def assignee(self):
         return User(self.assignee_id)
 
+    @utils.lazy_property
+    def contact_type(self):
+        if self.contact_type_id:
+            contact_types = api.cache.get_or_set(
+                "contact_types",
+                lambda: ContactType.list()
+            )
+            results = filter(
+                lambda x: x.id == self.contact_type_id,
+                contact_types
+            )
+            if len(results) == 1:
+                return results[0]
+        return None
+
 
 class Lead(CRUDModel, SearchableModel):
     _endpoint = "leads"
