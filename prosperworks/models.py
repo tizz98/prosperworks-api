@@ -585,8 +585,14 @@ class Person(CRUDModel, SearchableModel):
         return person.populate(data=data)
 
 
-class User(ListableModel):
+class User(SearchableModel):
     _endpoint = "users"
+    _search_fields = (
+        'page_number',
+        'page_size',
+        'sort_by',
+        'sort_direction',
+    )
 
     id = None
     name = None
